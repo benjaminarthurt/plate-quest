@@ -1,0 +1,11 @@
+{
+  "name":"Plate Quest",
+  "short_name":"Plate Quest",
+  "description":"Offline-first family road-trip license plate game.",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#0d1522",
+  "theme_color":"#16243a",
+  "icons":[]
+}
