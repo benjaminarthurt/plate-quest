@@ -5,9 +5,14 @@ import json
 import sys
 from pathlib import Path
 
-from shapely.geometry import shape, mapping
+from shapely.geometry import mapping, shape
 
 COUNTRIES = {"USA", "CAN", "MEX"}
+ID_ALIASES = {
+    # Natural Earth still uses the former Distrito Federal code.
+    # ISO 3166-2 now identifies Mexico City as MX-CMX.
+    "MX-DIF": "MX-CMX",
+}
 
 
 def feature_country(properties):
@@ -24,7 +29,7 @@ def feature_id(properties):
         if value:
             value = str(value).upper()
             if "-" in value:
-                return value
+                return ID_ALIASES.get(value, value)
     return None
 
 
