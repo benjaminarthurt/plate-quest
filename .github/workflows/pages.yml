@@ -18,6 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Build North America map data
+        run: |
+          python -m pip install --disable-pip-version-check shapely
+          curl --fail --location --retry 3 \
+            https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson \
+            --output /tmp/admin1.geojson
+          python scripts/build_map_data.py /tmp/admin1.geojson data/north-america-admin1.geojson
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
