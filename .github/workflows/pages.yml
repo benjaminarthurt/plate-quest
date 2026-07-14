@@ -25,10 +25,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install build dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check shapely pillow
+
       - name: Build North America map data
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check shapely
           curl --fail --location --retry 3 --retry-delay 2 \
             https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson \
             --output /tmp/admin1.geojson
@@ -36,25 +40,58 @@ jobs:
             /tmp/admin1.geojson \
             data/north-america-admin1.geojson
 
-      - name: Validate deployable map asset
+      - name: Download CC0 U.S. plate dataset
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/plate-dataset
+          curl --fail --location --retry 3 --retry-delay 3 \
+            https://www.kaggle.com/api/v1/datasets/download/gpiosenka/us-license-plates-image-classification \
+            --output /tmp/us-license-plates.zip
+          unzip -q /tmp/us-license-plates.zip -d /tmp/plate-dataset
+
+      - name: Build normalized plate assets
+        run: |
+          set -euo pipefail
+          rm -rf assets/plates/us
+          mkdir -p assets/plates/us
+          python scripts/build_plate_assets.py \
+            /tmp/plate-dataset \
+            assets/plates/us \
+            assets/plates/manifest.json
+
+      - name: Validate generated assets
         run: |
           set -euo pipefail
           test -s data/north-america-admin1.geojson
+          test -s assets/plates/manifest.json
           python - <<'PY'
           import json
           from pathlib import Path
 
-          path = Path('data/north-america-admin1.geojson')
-          data = json.loads(path.read_text(encoding='utf-8'))
-          features = data.get('features', [])
+          map_path = Path('data/north-america-admin1.geojson')
+          map_data = json.loads(map_path.read_text(encoding='utf-8'))
+          features = map_data.get('features', [])
           if len(features) < 90:
               raise SystemExit(f'Expected at least 90 map features, found {len(features)}')
-          ids = {str(f.get('properties', {}).get('id', '')).upper() for f in features}
-          required = {'US-ME', 'US-NH', 'CA-ON', 'MX-CMX'}
-          missing = sorted(required - ids)
-          if missing:
-              raise SystemExit(f'Missing required map jurisdictions: {missing}')
-          print(f'Validated {len(features)} map features in {path}')
+          map_ids = {str(f.get('properties', {}).get('id', '')).upper() for f in features}
+          required_map = {'US-ME', 'US-NH', 'CA-ON', 'MX-CMX'}
+          missing_map = sorted(required_map - map_ids)
+          if missing_map:
+              raise SystemExit(f'Missing required map jurisdictions: {missing_map}')
+
+          manifest_path = Path('assets/plates/manifest.json')
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          plates = manifest.get('plates', {})
+          required_plates = {'US-AL', 'US-AK', 'US-CA', 'US-DC', 'US-ME', 'US-NY', 'US-TX', 'US-WY'}
+          missing_plates = sorted(required_plates - set(plates))
+          if missing_plates:
+              raise SystemExit(f'Missing required plate assets: {missing_plates}')
+          if len(plates) < 51:
+              raise SystemExit(f'Expected at least 51 U.S. plate assets, found {len(plates)}')
+          missing_files = [path for path in plates.values() if not Path(path).is_file()]
+          if missing_files:
+              raise SystemExit(f'Manifest references missing files: {missing_files[:5]}')
+          print(f'Validated {len(features)} map features and {len(plates)} plate assets')
           PY
 
       - name: Configure Pages
