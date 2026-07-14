@@ -1,33 +1,70 @@
 name: Deploy GitHub Pages
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: true
+
 jobs:
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Build North America map data
         run: |
+          set -euo pipefail
           python -m pip install --disable-pip-version-check shapely
-          curl --fail --location --retry 3 \
+          curl --fail --location --retry 3 --retry-delay 2 \
             https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson \
             --output /tmp/admin1.geojson
-          python scripts/build_map_data.py /tmp/admin1.geojson data/north-america-admin1.geojson
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+          python scripts/build_map_data.py \
+            /tmp/admin1.geojson \
+            data/north-america-admin1.geojson
+
+      - name: Validate deployable map asset
+        run: |
+          set -euo pipefail
+          test -s data/north-america-admin1.geojson
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('data/north-america-admin1.geojson')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          features = data.get('features', [])
+          if len(features) < 90:
+              raise SystemExit(f'Expected at least 90 map features, found {len(features)}')
+          ids = {str(f.get('properties', {}).get('id', '')).upper() for f in features}
+          required = {'US-ME', 'US-NH', 'CA-ON', 'MX-CMX'}
+          missing = sorted(required - ids)
+          if missing:
+              raise SystemExit(f'Missing required map jurisdictions: {missing}')
+          print(f'Validated {len(features)} map features in {path}')
+          PY
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - id: deployment
+
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
