@@ -1,4 +1,4 @@
-const CACHE='plate-quest-v8.0';
+const CACHE='plate-quest-v8.1';
 const CORE=['./','./index.html','./css/app.css','./js/app.js','./data/jurisdictions.json','./data/north-america-admin1.geojson','./manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
