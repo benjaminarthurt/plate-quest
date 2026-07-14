@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#16243a">
+  <meta name="description" content="An offline-first family road-trip license plate game.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./css/app.css">
+  <title>Plate Quest</title>
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Offline road-trip game</p>
+      <h1>Plate Quest</h1>
+    </div>
+    <span id="networkStatus" class="status">Checking…</span>
+  </header>
+
+  <main>
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">Current trip</p>
+        <h2 id="tripName">No active trip</h2>
+        <p id="locationText">Location has not been checked.</p>
+      </div>
+      <button id="newTripButton" class="primary">Start new trip</button>
+    </section>
+
+    <section class="stats" aria-label="Trip statistics">
+      <article class="card"><strong id="plateCount">0</strong><span>plates</span></article>
+      <article class="card"><strong id="distanceTotal">0</strong><span>estimated miles</span></article>
+      <article class="card"><strong id="pointTotal">0</strong><span>points</span></article>
+    </section>
+
+    <section class="map-card card">
+      <div class="section-heading">
+        <div><p class="eyebrow">Collection map</p><h2>North America</h2></div>
+        <button id="locateButton" class="secondary">Locate me</button>
+      </div>
+      <div class="map-placeholder" role="img" aria-label="Map placeholder for bundled North American jurisdiction boundaries">
+        <span>Interactive jurisdiction map</span>
+        <small>GeoJSON boundary integration is the next implementation milestone.</small>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div><p class="eyebrow">Add a sighting</p><h2>Choose a plate</h2></div>
+        <input id="plateSearch" type="search" placeholder="Search jurisdiction" aria-label="Search jurisdictions">
+      </div>
+      <div id="jurisdictionGrid" class="jurisdiction-grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div><p class="eyebrow">Saved locally</p><h2>Collected this trip</h2></div>
+        <button id="exportButton" class="secondary">Export JSON</button>
+      </div>
+      <div id="collectedList" class="empty-state">Start a trip and add the first plate.</div>
+    </section>
+  </main>
+
+  <dialog id="tripDialog">
+    <form method="dialog" id="tripForm">
+      <h2>Start a new trip</h2>
+      <label>Trip name<input id="tripNameInput" required maxlength="60" placeholder="Summer road trip"></label>
+      <div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button value="default" class="primary">Start trip</button></div>
+    </form>
+  </dialog>
+
+  <script src="./js/app.js" type="module"></script>
+</body>
+</html>
