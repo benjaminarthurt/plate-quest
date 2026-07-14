@@ -1,0 +1,17 @@
+[
+  {"id":"US-NY","name":"New York","abbr":"NY","country":"United States","lat":42.9,"lon":-75.5},
+  {"id":"US-PA","name":"Pennsylvania","abbr":"PA","country":"United States","lat":40.9,"lon":-77.8},
+  {"id":"US-AK","name":"Alaska","abbr":"AK","country":"United States","lat":64.2,"lon":-152.3},
+  {"id":"US-CA","name":"California","abbr":"CA","country":"United States","lat":37.2,"lon":-119.7},
+  {"id":"US-FL","name":"Florida","abbr":"FL","country":"United States","lat":28.6,"lon":-82.4},
+  {"id":"US-DC","name":"District of Columbia","abbr":"DC","country":"United States","lat":38.9,"lon":-77.0},
+  {"id":"CA-ON","name":"Ontario","abbr":"ON","country":"Canada","lat":50.0,"lon":-85.0},
+  {"id":"CA-QC","name":"Quebec","abbr":"QC","country":"Canada","lat":52.0,"lon":-71.8},
+  {"id":"CA-AB","name":"Alberta","abbr":"AB","country":"Canada","lat":54.5,"lon":-115.0},
+  {"id":"CA-BC","name":"British Columbia","abbr":"BC","country":"Canada","lat":54.0,"lon":-125.0},
+  {"id":"CA-YT","name":"Yukon","abbr":"YT","country":"Canada","lat":64.0,"lon":-135.0},
+  {"id":"MX-CMX","name":"Mexico City","abbr":"CDMX","country":"Mexico","lat":19.43,"lon":-99.13},
+  {"id":"MX-NLE","name":"Nuevo León","abbr":"NL","country":"Mexico","lat":25.6,"lon":-99.8},
+  {"id":"US-PR","name":"Puerto Rico","abbr":"PR","country":"U.S. Territory","lat":18.22,"lon":-66.59},
+  {"id":"SPECIAL-DIP","name":"Diplomatic","abbr":"DIP","country":"Special","fixedPoints":300}
+]
