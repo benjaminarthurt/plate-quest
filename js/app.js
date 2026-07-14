@@ -1,0 +1,24 @@
+const STORAGE_KEY='plateQuest.v1';
+let jurisdictions=[];
+let state=loadState();
+let position=null;
+const $=id=>document.getElementById(id);
+
+function loadState(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{activeTrip:null,trips:[]};}catch{return{activeTrip:null,trips:[]};}}
+function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));render();}
+function activeTrip(){return state.trips.find(t=>t.id===state.activeTrip)||null;}
+function haversine(a,b){const r=3958.8,toRad=n=>n*Math.PI/180;const dLat=toRad(b.lat-a.lat),dLon=toRad(b.lon-a.lon);const x=Math.sin(dLat/2)**2+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;return 2*r*Math.asin(Math.sqrt(x));}
+function scoreDistance(miles){return miles===0?10:Math.round(20*Math.sqrt(miles));}
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+function render(){const trip=activeTrip();$('tripName').textContent=trip?trip.name:'No active trip';$('plateCount').textContent=trip?trip.sightings.length:0;const miles=trip?trip.sightings.reduce((n,s)=>n+s.distance,0):0;const points=trip?trip.sightings.reduce((n,s)=>n+s.points,0):0;$('distanceTotal').textContent=Math.round(miles).toLocaleString();$('pointTotal').textContent=points.toLocaleString();renderJurisdictions();renderCollected();}
+function renderJurisdictions(filter=''){const trip=activeTrip(),seen=new Set(trip?.sightings.map(s=>s.jurisdictionId)||[]);$('jurisdictionGrid').innerHTML=jurisdictions.filter(j=>`${j.name} ${j.abbr} ${j.country}`.toLowerCase().includes(filter.toLowerCase())).map(j=>`<button class="jurisdiction" data-id="${j.id}" ${seen.has(j.id)?'disabled':''}><strong>${escapeHtml(j.name)}</strong><span>${escapeHtml(j.country)} · ${escapeHtml(j.abbr)}</span></button>`).join('');}
+function renderCollected(){const trip=activeTrip();if(!trip||!trip.sightings.length){$('collectedList').className='empty-state';$('collectedList').textContent='Start a trip and add the first plate.';return;}$('collectedList').className='';$('collectedList').innerHTML=trip.sightings.slice().reverse().map(s=>`<div class="collected-item"><span><strong>${escapeHtml(s.name)}</strong><br><small>${Math.round(s.distance).toLocaleString()} estimated miles</small></span><strong>${s.points} pts</strong></div>`).join('');}
+function startTrip(name){const trip={id:crypto.randomUUID(),name,startedAt:new Date().toISOString(),sightings:[]};state.trips.push(trip);state.activeTrip=trip.id;saveState();}
+function addSighting(id){const trip=activeTrip();if(!trip){$('tripDialog').showModal();return;}const j=jurisdictions.find(x=>x.id===id);if(!j||trip.sightings.some(s=>s.jurisdictionId===id))return;const distance=j.fixedPoints?0:position?haversine(position,{lat:j.lat,lon:j.lon}):0;const points=j.fixedPoints||scoreDistance(distance);trip.sightings.push({id:crypto.randomUUID(),jurisdictionId:id,name:j.name,distance,points,lat:position?.lat??null,lon:position?.lon??null,sightedAt:new Date().toISOString()});saveState();}
+function locate(){if(!navigator.geolocation){$('locationText').textContent='Geolocation is unavailable in this browser.';return;}$('locationText').textContent='Locating…';navigator.geolocation.getCurrentPosition(p=>{position={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};$('locationText').textContent=`Current position saved · accuracy ±${Math.round(position.accuracy)} m`;},e=>{$('locationText').textContent=`Location unavailable: ${e.message}`;},{enableHighAccuracy:true,timeout:12000,maximumAge:30000});}
+function updateNetwork(){const online=navigator.onLine;$('networkStatus').textContent=online?'Online':'Offline · saved locally';}
+function exportData(){const blob=new Blob([JSON.stringify({format:'plate-quest-backup',version:1,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='plate-quest-backup.json';a.click();URL.revokeObjectURL(url);}
+
+async function init(){jurisdictions=await fetch('./data/jurisdictions.json').then(r=>r.json());render();updateNetwork();if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js');}
+$('newTripButton').addEventListener('click',()=>$('tripDialog').showModal());$('tripForm').addEventListener('submit',e=>{e.preventDefault();const name=$('tripNameInput').value.trim();if(name){startTrip(name);$('tripDialog').close();e.target.reset();}});$('locateButton').addEventListener('click',locate);$('plateSearch').addEventListener('input',e=>renderJurisdictions(e.target.value));$('jurisdictionGrid').addEventListener('click',e=>{const button=e.target.closest('[data-id]');if(button)addSighting(button.dataset.id);});$('exportButton').addEventListener('click',exportData);addEventListener('online',updateNetwork);addEventListener('offline',updateNetwork);init();
