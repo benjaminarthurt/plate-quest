@@ -7,7 +7,7 @@
 <title>Plate Quest</title>
 </head>
 <body>
-<header class="app-header"><div><h1>Plate Quest</h1><p id="locationText">Location updates automatically.</p></div><span id="networkStatus" class="status">Checking…</span></header>
+<header class="app-header"><div><h1>Plate Quest</h1><p id="locationText">Location updates automatically.</p></div><div class="header-actions"><button id="helpButton" class="help-button" type="button" aria-label="How to play">?</button><span id="networkStatus" class="status">Checking…</span></div></header>
 <main>
 <section class="trip-bar card"><div><span class="eyebrow">Co-op trip</span><strong id="tripName">Ready to play</strong></div><div class="button-row"><button id="newTripButton" class="primary">Start</button><button id="endTripButton" class="secondary" hidden>End</button></div></section>
 <section class="stats" aria-label="Trip statistics"><article><strong id="plateCount">0</strong><span>plates</span></article><article><strong id="distanceTotal">0</strong><span>miles</span></article><article><strong id="pointTotal">0</strong><span>points</span></article><article><strong id="completionTotal">0%</strong><span>complete</span></article></section>
@@ -15,7 +15,24 @@
 <section class="plates card"><div class="plate-toolbar"><strong>Tap a plate to collect it</strong><input id="plateSearch" type="search" placeholder="Search"></div><div id="plateTabs" class="tabs" role="tablist" aria-label="Plate groups"></div><div id="countryGroups"></div></section>
 <section class="card compact-card"><details class="settings-panel"><summary>Trip settings and data</summary><div class="settings-content"><label class="select-label">Correct current jurisdiction<select id="currentJurisdiction"><option value="">Choose state, province, or territory</option></select></label><div class="button-row settings-buttons"><button id="exportButton" class="secondary">Export JSON</button><button id="clearButton" class="danger">Clear data</button></div></div></details></section>
 <section class="card compact-card"><div class="compact-heading"><strong>Collected this trip</strong></div><div id="collectedList" class="empty-state">Tap a plate or map region to collect it.</div></section>
+<p class="plate-note"><strong>Plate picture tip:</strong> Places can have lots of different plate designs. These pictures are examples to help your team recognize them, so the plate you spot may look a little different.</p>
 </main>
+<dialog id="welcomeDialog" class="welcome-dialog" aria-labelledby="welcomeTitle">
+<form method="dialog" id="welcomeForm">
+<div class="welcome-mark" aria-hidden="true">🚗</div>
+<h2 id="welcomeTitle">Welcome to Plate Quest!</h2>
+<p>Everyone plays on one team. See how many different license plates your family can find during the trip.</p>
+<ol class="how-to-list">
+<li>Keep an eye out for plates from different states, provinces, territories, and special groups.</li>
+<li>When your team spots a new one, tap its picture, name, or map area.</li>
+<li>Each place can be collected once per trip.</li>
+<li>Plates from farther away earn more points.</li>
+</ol>
+<p class="safety-note"><strong>Road-trip rule:</strong> Let a passenger tap the game. Drivers should keep their eyes on the road.</p>
+<label class="welcome-choice"><input id="hideWelcomeCheckbox" type="checkbox"> Skip these instructions next time</label>
+<button id="letsPlayButton" class="primary welcome-start" value="play">Let’s play!</button>
+</form>
+</dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="./js/app.js" type="module"></script>
 </body></html>
