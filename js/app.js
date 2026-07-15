@@ -1,4 +1,5 @@
 const STORAGE_KEY='plateQuest.v9';
+const WELCOME_PREF_KEY='plateQuest.hideWelcome';
 const MAP_DATA_URL='./data/north-america-admin1.geojson';
 const PLATE_MANIFEST_URL='./assets/plates/manifest.json';
 const MAP_BOUNDS={minLon:-170,maxLon:-50,minLat:14,maxLat:84,width:1200,height:700,pad:18};
@@ -32,6 +33,7 @@ function pointInGeometry(point,g){if(!g)return false;const inside=p=>pointInRing
 function detectJurisdiction(point){const feature=boundaries.find(f=>pointInGeometry(point,f.geometry));if(!feature)return null;const id=feature.properties?.id?.toUpperCase();return jurisdictions.find(j=>j.id===id)||jurisdictions.find(j=>normalize(j.name)===normalize(feature.properties?.name));}
 function dateTripName(){return `Road Trip · ${new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}`;}
 function ensureTrip(){let current=trip();if(current)return current;current={id:uuid(),name:dateTripName(),mode:'co-op',startedAt:new Date().toISOString(),sightings:[]};state.trips.push(current);state.activeTrip=current.id;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));locate(true);return current;}
+function openWelcome(force=false){const dialog=$('welcomeDialog');if(!dialog||dialog.open)return;if(!force&&(trip()||localStorage.getItem(WELCOME_PREF_KEY)==='true'))return;$('hideWelcomeCheckbox').checked=localStorage.getItem(WELCOME_PREF_KEY)==='true';dialog.showModal();}
 
 function render(){
  const currentTrip=trip(),seen=new Set(currentTrip?.sightings.map(s=>s.jurisdictionId)||[]),miles=currentTrip?.sightings.reduce((n,s)=>n+s.distance,0)||0,score=currentTrip?.sightings.reduce((n,s)=>n+s.points,0)||0,current=jurisdictions.find(j=>j.id===state.currentJurisdictionId);
@@ -59,9 +61,11 @@ async function loadMapData(){const response=await fetch(MAP_DATA_URL,{cache:'no-
 async function loadPlateManifest(){try{const response=await fetch(PLATE_MANIFEST_URL,{cache:'no-cache'});if(response.ok)plateImages=(await response.json()).plates||{};}catch{plateImages={};}}
 function exportData(){const blob=new Blob([JSON.stringify({format:'plate-quest-backup',version:9,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='plate-quest-backup.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function updateNetwork(){$('networkStatus').textContent=navigator.onLine?'Online':'Offline';}
-async function init(){try{const r=await fetch('./data/jurisdictions.json');if(!r.ok)throw new Error('Game data failed to load');jurisdictions=await r.json();populateLocation();updateNetwork();await Promise.all([loadMapData(),loadPlateManifest()]);render();if(trip()&&!position)locate(true);if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js');}catch(error){$('mapStatus').textContent=error.message;toast(error.message);}}
+async function init(){try{const r=await fetch('./data/jurisdictions.json');if(!r.ok)throw new Error('Game data failed to load');jurisdictions=await r.json();populateLocation();updateNetwork();await Promise.all([loadMapData(),loadPlateManifest()]);render();if(trip()&&!position)locate(true);if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js');requestAnimationFrame(()=>openWelcome(false));}catch(error){$('mapStatus').textContent=error.message;toast(error.message);}}
 
 $('newTripButton').onclick=startTrip;
+$('helpButton').onclick=()=>openWelcome(true);
+$('welcomeDialog').addEventListener('close',()=>{localStorage.setItem(WELCOME_PREF_KEY,$('hideWelcomeCheckbox').checked?'true':'false');});
 document.addEventListener('click',e=>{const tab=e.target.closest('[data-tab]');if(tab){activeTab=tab.dataset.tab;render();return;}const plate=e.target.closest('[data-id]');if(plate&&!plate.disabled)recordSighting(plate.dataset.id);const shape=e.target.closest('[data-map-id]');if(shape)recordSighting(shape.dataset.mapId);});
 document.addEventListener('keydown',e=>{const shape=e.target.closest?.('[data-map-id]');if(shape&&(e.key==='Enter'||e.key===' ')){e.preventDefault();recordSighting(shape.dataset.mapId);}});
 $('currentJurisdiction').onchange=e=>{position=null;state.currentJurisdictionId=e.target.value||null;persist();toast(state.currentJurisdictionId?'Location corrected':'Location cleared');};
