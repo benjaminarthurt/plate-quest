@@ -1,4 +1,4 @@
-const CACHE='plate-quest-v9.2';
+const CACHE='plate-quest-v9.3';
 const CORE=['./','./index.html','./css/app.css','./js/app.js','./data/jurisdictions.json','./data/north-america-admin1.geojson','./assets/plates/manifest.json','./manifest.webmanifest'];
 
 self.addEventListener('install',event=>event.waitUntil((async()=>{
