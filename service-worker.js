@@ -1,5 +1,5 @@
-const CACHE='plate-quest-v9.4';
-const CORE=['./','./index.html','./css/app.css','./js/app.js','./data/jurisdictions.json','./data/north-america-admin1.geojson','./assets/plates/manifest.json','./manifest.webmanifest'];
+const CACHE='plate-quest-v9.5';
+const CORE=['./','./index.html','./css/app.css','./js/app.js','./data/jurisdictions.json','./data/north-america-admin1.geojson','./assets/plates/manifest.json','./assets/built-at-signal-foundry.svg','./manifest.webmanifest'];
 
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
